@@ -1,0 +1,52 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "assets/images"
+public_folder: "/assets/images"
+
+# กำหนดภาษาไทย
+locale: 'th'
+
+# เมนูทางซ้ายมือ
+collections:
+  - name: "posts"
+    label: "บทความ (Posts)"
+    folder: "_posts"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "Layout", name: "layout", widget: "hidden", default: "single"}
+      - {label: "ชื่อบทความ", name: "title", widget: "string"}
+      - {label: "วันที่เผยแพร่", name: "date", widget: "datetime"}
+      
+      # ตรงนี้คือ Combo Box เลือกหมวดหมู่ที่คุณอยากได้
+      - label: "หมวดหมู่ (Categories)"
+        name: "categories"
+        widget: "select"
+        options: ["IT", "Audio Games", "Novel", "Music", "Review", "News"]
+        multiple: true
+        
+      # ช่องเลือกรูปปก (ถ้ามี)
+      - label: "รูปปก (Header Image)"
+        name: "header"
+        widget: "object"
+        collapsed: true
+        fields:
+          - {label: "เลือกรูป", name: "teaser", widget: "image", required: false}
+          
+      # พื้นที่เขียนเนื้อหา (รองรับ Ctrl+B, Ctrl+K)
+      - label: "เนื้อหาบทความ"
+        name: "body"
+        widget: "markdown"
+
+  # เมนูสำหรับแก้หน้า About หรือ Portfolio
+  - name: "pages"
+    label: "หน้าเว็บ (Pages)"
+    files:
+      - label: "เกี่ยวกับเรา (About)"
+        name: "about"
+        file: "_pages/about.md"
+        fields:
+          - {label: "Title", name: "title", widget: "string"}
+          - {label: "Body", name: "body", widget: "markdown"}
