@@ -4,49 +4,127 @@ backend:
 
 media_folder: "assets/images"
 public_folder: "/assets/images"
-
-# กำหนดภาษาไทย
 locale: 'th'
+editor: { preview: false }
 
-# เมนูทางซ้ายมือ
 collections:
+  # =======================================================
+  # 1. ⚙️ ตั้งค่าส่วนกลาง (เพิ่มเมนูหัวเว็บได้จากตรงนี้)
+  # =======================================================
+  - name: "settings"
+    label: "⚙️ ตั้งค่าส่วนกลาง (Site Config)"
+    files:
+      - name: "navigation"
+        label: "จัดการเมนูหัวเว็บ (Main Menu)"
+        file: "_data/navigation.yml"
+        fields:
+          - label: "รายการเมนู"
+            name: "main"
+            widget: "list"
+            fields:
+              - {label: "ชื่อปุ่มเมนู", name: "title", widget: "string"}
+              - {label: "ลิงก์ (URL)", name: "url", widget: "string", hint: "เช่น /about/ หรือ /portfolio/"}
+
+  # =======================================================
+  # 2. 🏷️ จัดการคลังหมวดหมู่ (สร้างหมวดหมู่รอไว้ตรงนี้)
+  # =======================================================
+  - name: "categories"
+    label: "🏷️ จัดการหมวดหมู่ (Category List)"
+    folder: "_categories"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - {label: "ชื่อหมวดหมู่", name: "title", widget: "string"}
+      # เทคนิค: สร้างไฟล์หมวดหมู่ไว้ที่นี่ แล้วมันจะไปโผล่เป็นตัวเลือกในหน้าเขียนบทความ
+
+  # =======================================================
+  # 3. 📝 เขียนบทความ (Posts) - ใช้ระบบเลือกหมวดหมู่แบบเดิม
+  # =======================================================
   - name: "posts"
-    label: "บทความ (Posts)"
+    label: "📝 เขียนบทความ (Posts)"
     folder: "_posts"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     fields:
-      - {label: "Layout", name: "layout", widget: "hidden", default: "single"}
-      - {label: "ชื่อบทความ", name: "title", widget: "string"}
-      - {label: "วันที่เผยแพร่", name: "date", widget: "datetime"}
+      # --- ส่วนควบคุม ---
+      - label: "สถานะ (Draft/Publish)"
+        name: "published"
+        widget: "boolean"
+        default: true
       
-      # ตรงนี้คือ Combo Box เลือกหมวดหมู่ที่คุณอยากได้
-      - label: "หมวดหมู่ (Categories)"
+      - label: "ปักหมุดแนะนำ (Featured)"
+        name: "featured"
+        widget: "boolean"
+        default: false
+        required: false
+
+      - label: "แสดงสารบัญ (Table of Contents)"
+        name: "toc"
+        widget: "boolean"
+        default: true
+
+      # --- ข้อมูลบทความ ---
+      - {label: "ชื่อบทความ", name: "title", widget: "string"}
+      - {label: "วันที่", name: "date", widget: "datetime"}
+
+      # --- พระเอกของเรา: ระบบเลือกหมวดหมู่ (Combo Box) ---
+      - label: "หมวดหมู่ (เลือกจากรายการ)"
         name: "categories"
-        widget: "select"
-        options: ["IT", "Audio Games", "Novel", "Music", "Review", "News"]
+        widget: "relation"
+        collection: "categories" # เชื่อมกับเมนูข้อ 2
+        search_fields: ["title"]
+        value_field: "title"
+        display_fields: ["title"]
         multiple: true
-        
-      # ช่องเลือกรูปปก (ถ้ามี)
+        hint: "ถ้าในลิสต์ไม่มี ให้ไปสร้างใหม่ที่เมนู 'จัดการหมวดหมู่' ก่อนนะครับ"
+
+      - {label: "แท็ก (Tags)", name: "tags", widget: "list", required: false}
+
+      # --- รูปปก ---
       - label: "รูปปก (Header Image)"
         name: "header"
         widget: "object"
         collapsed: true
         fields:
           - {label: "เลือกรูป", name: "teaser", widget: "image", required: false}
-          
-      # พื้นที่เขียนเนื้อหา (รองรับ Ctrl+B, Ctrl+K)
-      - label: "เนื้อหาบทความ"
-        name: "body"
-        widget: "markdown"
+          - {label: "คำบรรยาย", name: "caption", widget: "string", required: false}
 
-  # เมนูสำหรับแก้หน้า About หรือ Portfolio
+      # --- เนื้อหา ---
+      - {label: "เนื้อหาบทความ", name: "body", widget: "markdown"}
+
+  # =======================================================
+  # 4. 📄 หน้าเว็บ (Pages)
+  # =======================================================
   - name: "pages"
-    label: "หน้าเว็บ (Pages)"
-    files:
-      - label: "เกี่ยวกับเรา (About)"
-        name: "about"
-        file: "_pages/about.md"
-        fields:
-          - {label: "Title", name: "title", widget: "string"}
-          - {label: "Body", name: "body", widget: "markdown"}
+    label: "📄 หน้าเว็บ (Pages)"
+    folder: "_pages"
+    create: true
+    extension: "md"
+    fields:
+      - label: "รูปแบบหน้า (Layout)"
+        name: "layout"
+        widget: "select"
+        default: "single"
+        options:
+          - { label: "บทความทั่วไป", value: "single" }
+          - { label: "หน้าค้นหา (Search)", value: "search" }
+          - { label: "หน้าคลังหมวดหมู่", value: "categories" }
+          - { label: "หน้าคลังแท็ก", value: "tags" }
+          - { label: "หน้าคลังรายปี", value: "posts" }
+          - { label: "หน้าแรก", value: "home" }
+      - {label: "หัวข้อ", name: "title", widget: "string"}
+      - {label: "ลิงก์", name: "permalink", widget: "string", hint: "ต้องมี / หน้าหลัง เช่น /contact/"}
+      - {label: "เนื้อหา", name: "body", widget: "markdown", required: false}
+
+  # =======================================================
+  # 5. 💼 ผลงาน (Portfolio)
+  # =======================================================
+  - name: "portfolio"
+    label: "💼 ผลงาน (Portfolio)"
+    folder: "_portfolio"
+    create: true
+    fields:
+      - {label: "ชื่อผลงาน", name: "title", widget: "string"}
+      - {label: "วันที่", name: "date", widget: "datetime"}
+      - {label: "รูปปก", name: "header", widget: "object", fields: [{label: "Teaser", name: "teaser", widget: "image"}]}
+      - {label: "เนื้อหา", name: "body", widget: "markdown"}
