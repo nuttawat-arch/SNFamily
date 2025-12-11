@@ -1,31 +1,23 @@
 backend:
   name: git-gateway
-  branch: master # ตรวจสอบให้ตรงกับ branch ของคุณ
+  branch: master
 
 media_folder: "assets/images"
 public_folder: "/assets/images"
 locale: 'th'
-
-# ปิดการพรีวิวอัตโนมัติเพื่อให้พิมพ์ลื่นขึ้น
-editor:
-  preview: false
+editor: { preview: false }
 
 collections:
   # =========================================
-  # 1. เมนูจัดการข้อมูลระบบ (เพิ่ม/ลบ หมวดหมู่ตรงนี้)
+  # 1. เมนูจัดการหมวดหมู่ (แบบใหม่: 1 หมวด = 1 ไฟล์)
   # =========================================
-  - name: "settings"
-    label: "⚙️ จัดการข้อมูลระบบ (Settings)"
-    files:
-      - name: "categories"
-        label: "จัดการหมวดหมู่ (Category List)"
-        file: "_data/categories.yml"
-        fields:
-          - label: "รายชื่อหมวดหมู่ทั้งหมด"
-            name: "items"
-            widget: "list"
-            fields:
-              - {label: "ชื่อหมวดหมู่", name: "name", widget: "string"}
+  - name: "categories"
+    label: "🏷️ จัดการหมวดหมู่ (Categories)"
+    folder: "_categories" # วิ่งไปหาโฟลเดอร์บัตรคำ
+    create: true          # อนุญาตให้สร้างหมวดใหม่ได้
+    slug: "{{slug}}"
+    fields:
+      - {label: "ชื่อหมวดหมู่", name: "title", widget: "string"}
 
   # =========================================
   # 2. เมนูบทความ (Posts)
@@ -36,76 +28,48 @@ collections:
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     fields:
-      # --- ส่วนควบคุม (Control) ---
-      - label: "สถานะการเผยแพร่ (Draft = ซ่อน)"
-        name: "published"
-        widget: "boolean"
-        default: true
-        
-      - label: "ปักหมุดแนะนำ (Featured)"
-        name: "featured"
-        widget: "boolean"
-        default: false
-        required: false
+      - {label: "สถานะ (Draft/Publish)", name: "published", widget: "boolean", default: true}
+      - {label: "ปักหมุด (Featured)", name: "featured", widget: "boolean", default: false, required: false}
+      
+      - {label: "ชื่อบทความ", name: "title", widget: "string"}
+      - {label: "วันที่", name: "date", widget: "datetime"}
 
-      # --- ข้อมูลหลัก ---
-      - label: "ชื่อบทความ (Title)"
-        name: "title"
-        widget: "string"
-
-      - label: "วันที่เผยแพร่"
-        name: "date"
-        widget: "datetime"
-
-      # --- นี่คือระบบเลือกหมวดหมู่แบบ Combo Box (ดึงจากข้อ 1) ---
-      - label: "หมวดหมู่ (เลือกจากลิสต์)"
+      # --- Combo Box ที่ใช้งานได้จริง ---
+      - label: "หมวดหมู่ (เลือกได้หลายอัน)"
         name: "categories"
         widget: "relation"
-        collection: "settings"
-        file: "categories"
-        search_fields: ["items.name"]
-        value_field: "items.name"
-        display_fields: ["items.name"]
+        collection: "categories" # เชื่อมกับเมนูข้อ 1
+        search_fields: ["title"]
+        value_field: "title"
+        display_fields: ["title"]
         multiple: true
-        hint: "ถ้าต้องการเพิ่มหมวดใหม่ ให้ไปที่เมนู 'จัดการข้อมูลระบบ'"
+        hint: "ถ้าหมวดหมู่ที่ต้องการไม่มี ให้ไปสร้างที่เมนู 'จัดการหมวดหมู่' ก่อน"
 
-      - label: "แท็ก (Tags)"
-        name: "tags"
-        widget: "list"
-        required: false
-        hint: "พิมพ์แล้วกด Enter เพื่อเพิ่มแท็กใหม่"
+      - {label: "แท็ก (Tags)", name: "tags", widget: "list", required: false}
 
-      # --- รูปปก ---
       - label: "รูปปก (Header Image)"
         name: "header"
         widget: "object"
         collapsed: true
         fields:
           - {label: "เลือกรูป", name: "teaser", widget: "image", required: false}
-          - {label: "คำบรรยายภาพ", name: "caption", widget: "string", required: false}
+          - {label: "คำบรรยาย", name: "caption", widget: "string", required: false}
 
-      # --- เนื้อหา (ไม่มีช่อง YouTube แล้ว) ---
-      - label: "เนื้อหาบทความ (Body)"
-        name: "body"
-        widget: "markdown"
+      - {label: "เนื้อหา", name: "body", widget: "markdown"}
 
   # =========================================
-  # 3. เมนูหน้าเว็บ (Pages)
+  # 3. เมนูหน้าเว็บ & ผลงาน
   # =========================================
   - name: "pages"
     label: "📄 จัดการหน้าเว็บ (Pages)"
     folder: "_pages"
     create: true
     extension: "md"
-    slug: "{{slug}}"
     fields:
-      - {label: "หัวข้อหน้าเว็บ", name: "title", widget: "string"}
-      - {label: "ลิงก์ถาวร (Permalink)", name: "permalink", widget: "string", hint: "เช่น /about/"}
+      - {label: "หัวข้อ", name: "title", widget: "string"}
+      - {label: "ลิงก์ (Permalink)", name: "permalink", widget: "string"}
       - {label: "เนื้อหา", name: "body", widget: "markdown"}
 
-  # =========================================
-  # 4. เมนูจัดการผลงาน (Portfolio)
-  # =========================================
   - name: "portfolio"
     label: "💼 จัดการผลงาน (Portfolio)"
     folder: "_portfolio"
@@ -113,5 +77,5 @@ collections:
     fields:
       - {label: "ชื่อผลงาน", name: "title", widget: "string"}
       - {label: "วันที่", name: "date", widget: "datetime"}
-      - {label: "รูปตัวอย่าง", name: "header", widget: "object", fields: [{label: "Teaser", name: "teaser", widget: "image"}]}
+      - {label: "รูปปก", name: "header", widget: "object", fields: [{label: "Teaser", name: "teaser", widget: "image"}]}
       - {label: "เนื้อหา", name: "body", widget: "markdown"}
